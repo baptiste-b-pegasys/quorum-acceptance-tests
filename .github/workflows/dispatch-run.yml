@@ -7,13 +7,13 @@ on:
         default: 'default'
       runs-on:
         description: 'Runs on tag'
-        default: 'ubuntu-18.04'
+        default: 'ubuntu-20.04'
       goq-image:
         description: 'GoQuorum image'
         default: 'ghcr.io/baptiste-b-pegasys/quorum:develop'
       tessera-image:
         description: 'Tessera image'
-        default: 'ghcr.io/baptiste-b-pegasys/tessera:develop'
+        default: 'quorumengineering/tessera:22.1.0'
       force-build-docker:
         description: 'Set true to build the docker image'
         default: 'false'
@@ -63,7 +63,7 @@ jobs:
       - docker-build
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 5
       matrix:
         # list of tag expression being executed in parallel
         tag:
