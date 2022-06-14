@@ -235,7 +235,7 @@ jobs:
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
 
           cat <<EOF > cpu.sh
-            while:
+            while :
             do
               date
               grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}'
@@ -263,7 +263,7 @@ jobs:
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
-          killall ./cpu.sh
+          killall sh
           cat cpu.log
       - name: 'Failure info'
         if: ${{ failure() }}
