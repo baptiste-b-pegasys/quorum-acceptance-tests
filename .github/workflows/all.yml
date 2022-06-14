@@ -239,6 +239,7 @@ jobs:
             do
               date
               grep 'cpu ' /proc/stat
+              free -m | awk '/Mem:/ { print $7 }'
               sleep 5s
             done
           EOF
@@ -264,8 +265,8 @@ jobs:
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
-          kill %1
           cat cpu.log
+          kill %1
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
