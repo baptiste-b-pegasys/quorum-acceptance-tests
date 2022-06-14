@@ -234,10 +234,11 @@ jobs:
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
 
           cat <<EOF > cpu.sh
+            #!/bin/bash
             while :
             do
               date
-              grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}'
+              grep 'cpu ' /proc/stat
               sleep 5s
             done
           EOF
@@ -245,12 +246,13 @@ jobs:
       - name: 'Run tests'
         run: |
           free -m
+          cat /proc/stat
           while [ `free -m | awk '/Mem:/ { print $7 }'` < 1024 ]; do
             echo "not enough memory, sleeping"
             free -m
             sleep 1s
           done
-          ./cpu.sh &
+          ./cpu.sh > cpu.log &
           # we don't remove the container after run as we need to clean up the infra if used
           docker run \
               --name acctests-run ${{ steps.setup.outputs.dockerEnv }} \
@@ -262,7 +264,7 @@ jobs:
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
-          killall sh
+          killall bash
           cat cpu.log
       - name: 'Failure info'
         if: ${{ failure() }}
