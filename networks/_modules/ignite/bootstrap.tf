@@ -20,7 +20,7 @@ locals {
   legacy_config = merge(local.legacy_istanbul_config, local.legacy_qbft_config)
 
   ibft_config = var.consensus == "istanbul" ? { ibft = { "blockperiodseconds" : 1, "epochlength" : 30000 } } : {}
-  qbft_config  = var.consensus == "qbft" ? { qbft = { "blockperiodseconds" : 1, "epochlength" : 30000 } } : {}
+  qbft_config  = var.consensus == "qbft" ? { qbft = { "blockperiodseconds" : 1, "emptyblockperiodseconds" : 60, "epochlength" : 30000 } } : {}
 
   qbft_ibft_config = merge(local.ibft_config, local.qbft_config)
 

@@ -171,7 +171,7 @@ else
 fi
 
 if [ $VERSION == '2.5.0' ] || [ $VERSION == '21.10.0' ] || [ $VERSION == '22.1.1' ]; then
-  export ADDITIONAL_GETH_ARGS="${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 " : ""} $ADDITIONAL_GETH_ARGS"
+  export ADDITIONAL_GETH_ARGS="${(var.consensus == "istanbul" || var.consensus == "qbft") ? "--istanbul.blockperiod 1 --istanbul.emptyblockperiod 60" : ""} $ADDITIONAL_GETH_ARGS"
 fi
 
 ARGS="--identity Node${count.index + 1} \

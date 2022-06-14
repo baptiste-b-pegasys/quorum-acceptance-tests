@@ -117,6 +117,7 @@ resource "local_file" "genesis-file" {
 %{if var.consensus == "qbft"~}
     "qbft" : {
       "blockperiodseconds" : 1,
+      "emptyblockperiodseconds" : 60,
       "epochlength" : 30000,
       "requesttimeoutseconds" : 10
     },
