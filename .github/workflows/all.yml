@@ -233,6 +233,16 @@ jobs:
           echo "::set-output name=dockerEnv::$dockerEnv"
           echo "::set-output name=outputDir::${{ runner.temp }}"
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
+
+          cat <<EOF > cpu.sh
+            while:
+            do
+              date
+              grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}'
+              sleep 5s
+            done
+          EOF
+          chmod +x cpu.sh
       - name: 'Run tests'
         run: |
           free -m
@@ -241,6 +251,7 @@ jobs:
             free -m
             sleep 1s
           done
+          ./cpu.sh &
           # we don't remove the container after run as we need to clean up the infra if used
           docker run \
               --name acctests-run ${{ steps.setup.outputs.dockerEnv }} \
@@ -252,6 +263,8 @@ jobs:
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
+          killall ./cpu.sh
+          cat cpu.log
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
