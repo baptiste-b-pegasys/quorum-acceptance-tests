@@ -264,7 +264,7 @@ jobs:
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
-          killall bash
+          kill %1
           cat cpu.log
       - name: 'Failure info'
         if: ${{ failure() }}
