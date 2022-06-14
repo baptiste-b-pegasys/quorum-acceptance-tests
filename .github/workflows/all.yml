@@ -235,6 +235,12 @@ jobs:
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
       - name: 'Run tests'
         run: |
+          free -m
+          while [ `free -m | awk '/Mem:/ { print $7 }'` < 1024 ]; do
+            echo "not enough memory, sleeping"
+            free -m
+            sleep 1s
+          done
           # we don't remove the container after run as we need to clean up the infra if used
           docker run \
               --name acctests-run ${{ steps.setup.outputs.dockerEnv }} \
