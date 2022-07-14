@@ -28,7 +28,7 @@ module "helper" {
   geth = {
     container = {
       image   = var.quorum_docker_image
-      port    = { raft = 50400, p2p = 21000, http = 8545, ws = -1 }
+      port    = { raft = 50400, p2p = 21000, qlight = 30305, http = 8545, ws = -1 }
       graphql = false
     }
     host = {
@@ -60,6 +60,7 @@ module "network" {
   qbftBlock             = var.qbftBlock
 
   qbft_empty_block_period = var.qbft_empty_block_period
+  transition_config       = var.transition_config
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation

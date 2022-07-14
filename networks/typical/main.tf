@@ -32,6 +32,7 @@ module "helper" {
       port = {
         raft = 50400,
         p2p  = 21000,
+        qlight = 30305,
         http = 8545,
         ws   = -1
       }
@@ -50,7 +51,6 @@ module "helper" {
       port = {
         thirdparty = 9080,
         p2p        = 9000,
-        q2t        = 9081,
         q2t        = 9081
       }
     }
@@ -76,6 +76,7 @@ module "network" {
   qbftBlock            = var.qbftBlock
 
   qbft_empty_block_period = var.qbft_empty_block_period
+  transition_config       = var.transition_config
 
   override_tm_named_key_allocation  = var.override_tm_named_key_allocation
   override_named_account_allocation = var.override_named_account_allocation
@@ -83,6 +84,8 @@ module "network" {
 
   additional_tessera_config = var.additional_tessera_config
   additional_genesis_config = var.additional_genesis_config
+
+  qlight_clients = var.qlight_clients
 }
 
 module "docker" {
@@ -108,4 +111,8 @@ module "docker" {
   additional_tessera_container_vol = var.additional_tessera_container_vol
   tessera_app_container_path       = var.tessera_app_container_path
   accounts_count                   = module.network.accounts_count
+
+  qlight_clients = var.qlight_clients
+  qlight_server_indices = var.qlight_server_indices
+  qlight_p2p_urls = module.network.qlight_p2p_urls
 }

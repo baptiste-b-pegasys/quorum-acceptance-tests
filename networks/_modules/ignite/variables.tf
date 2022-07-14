@@ -9,6 +9,7 @@ variable "geth_networking" {
       http = object({ internal = number, external = number })
       ws   = object({ internal = number, external = number })
       p2p  = number
+      qlight = number
       raft = number
     })
     graphql = bool
@@ -130,9 +131,14 @@ variable "qbftBlock" {
 }
 
 variable "qbft_empty_block_period" {
-  type        = number
-  default     = 10
+  type        = object({ block = number, emptyblockperiod = number })
+  default     = { block = 110, emptyblockperiod = 10 }
   description = "qbft empty block period (number in seconds)"
+}
+
+variable "transition_config" {
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  default = { transitions = [] }
 }
 
 variable "hybrid_extradata" {
@@ -179,4 +185,10 @@ variable "hybrid_public_key_b64" {
 variable "hybrid_key_data" {
   default = []
   description = "tessera key data for hybrid network"
+}
+
+variable "qlight_clients" {
+  type = map(object({ server_idx = number, mps_psi = string, mt_is_server_tls_enabled = bool, mt_scope = string }))
+  description = "Map of which nodes are qlight clients (by 0-based index) and additional config including the index of their corresponding server node"
+  default = {}
 }

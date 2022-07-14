@@ -1,11 +1,13 @@
 locals {
   enode_urls = formatlist("\"enode://%s@%s:%d?discport=0&raftport=%d\"", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id, var.geth_networking[*].ip.private, var.geth_networking[*].port.p2p, var.geth_networking[*].port.raft)
+  qlight_p2p_urls = formatlist("enode://%s@%s:%d?discport=0&raftport=%d", quorum_bootstrap_node_key.nodekeys-generator[*].hex_node_id, var.geth_networking[*].ip.private, var.geth_networking[*].port.qlight, var.geth_networking[*].port.raft)
 
   # metadata for network subjected to initial participants input
   network = {
     hexNodeIds      = [for idx in local.node_indices : quorum_bootstrap_node_key.nodekeys-generator[idx].hex_node_id if lookup(local.quorum_initial_paticipants, idx, "false") == "true"]
     geth_networking = [for idx in local.node_indices : var.geth_networking[idx] if lookup(local.quorum_initial_paticipants, idx, "false") == "true"]
     enode_urls      = [for idx in local.node_indices : local.enode_urls[idx] if lookup(local.quorum_initial_paticipants, idx, "false") == "true"]
+    non_qlight_client_enode_urls = [for idx in local.non_qlight_client_node_indices : local.enode_urls[idx] if lookup(local.quorum_initial_paticipants, idx, "false") == "true"]
   }
 
 
@@ -23,15 +25,6 @@ locals {
   qbft_config  = var.consensus == "qbft" ? { qbft = { "blockperiodseconds" : 1, "emptyblockperiodseconds" : 60, "epochlength" : 30000 } } : {}
 
   qbft_ibft_config = merge(local.ibft_config, local.qbft_config)
-  transition_config = { transitions: [{ "block": var.qbftBlock.block, "algorithm": "qbft" }, { "block": 110, "emptyblockperiodseconds": var.qbft_empty_block_period }, { "block": 150, "emptyblockperiodseconds": 1 }] }
-#  transition_config = <<JSON
-#{ transitions: [
-#%{if var.qbftBlock.block > 0~}
-#  { "block": ${var.qbftBlock.block}, "algorithm": "qbft" },
-#%{endif~} 
-#  { "block": 110, "emptyblockperiodseconds": ${var.qbft_empty_block_period} }, { "block": 150, "emptyblockperiodseconds": 1 }
-#]}
-#  JSON
 
   chain_configs = [for idx in local.node_indices : merge(
     {
@@ -59,7 +52,7 @@ locals {
     local.privacyPrecompileBlock_config,
     local.qbft_ibft_config,
     lookup(var.additional_genesis_config, idx, {}),
-    local.transition_config
+    var.transition_config
   )]
 
   legacy_chain_configs = [for idx in local.node_indices : merge(
@@ -88,7 +81,7 @@ locals {
   local.privacyPrecompileBlock_config,
   local.legacy_config,
   lookup(var.additional_genesis_config, idx, {}),
-  local.transition_config
+  var.transition_config
   )]
 
 }
@@ -115,12 +108,12 @@ resource "quorum_bootstrap_network" "this" {
 }
 
 resource "quorum_bootstrap_keystore" "accountkeys-generator" {
-  count                = local.hybrid_network ? 0 : local.number_of_nodes
-  keystore_dir         = format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, count.index)
+  count                = local.hybrid_network ? 0 : length(local.non_qlight_client_node_indices)
+  keystore_dir         = format("%s/%s%s/keystore", quorum_bootstrap_network.this.network_dir_abs, local.node_dir_prefix, local.non_qlight_client_node_indices[count.index])
   use_light_weight_kdf = true
 
   dynamic "account" {
-    for_each = lookup(local.named_accounts_alloc, count.index)
+    for_each = lookup(local.named_accounts_alloc, local.non_qlight_client_node_indices[count.index])
     content {
       passphrase = ""
       balance    = "1000000000000000000000000000"
@@ -231,15 +224,16 @@ resource "quorum_bootstrap_data_dir" "datadirs-generator" {
   genesis  = local_file.latest-genesis-file-local[count.index].content
 }
 
+# qlight nodes should not be in the static-nodes.json as they are not involved in the p2p protocol
 resource "local_file" "static-nodes" {
-  count    = local.number_of_nodes
-  filename = format("%s/static-nodes.json", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs)
-  content  = "[${var.hybrid_network ? join(",", var.hybrid_enodeurls) : join(",", local.network.enode_urls)}]"
+  count    = length(local.non_qlight_client_node_indices)
+  filename = format("%s/static-nodes.json", quorum_bootstrap_data_dir.datadirs-generator[local.non_qlight_client_node_indices[count.index]].data_dir_abs)
+  content  = "[${var.hybrid_network ? join(",", var.hybrid_enodeurls) : join(",", local.network.non_qlight_client_enode_urls)}]"
 }
 
 resource "local_file" "permissioned-nodes" {
-  count    = local.number_of_nodes
-  filename = format("%s/permissioned-nodes.json", quorum_bootstrap_data_dir.datadirs-generator[count.index].data_dir_abs)
+  count    = length(local.non_qlight_client_node_indices)
+  filename = format("%s/permissioned-nodes.json", quorum_bootstrap_data_dir.datadirs-generator[local.non_qlight_client_node_indices[count.index]].data_dir_abs)
   content  = local_file.static-nodes[count.index].content
 }
 
