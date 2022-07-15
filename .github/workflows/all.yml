@@ -68,7 +68,7 @@ jobs:
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul && !block-heights) || networks/typical::istanbul'
-          - 'basic || basic-istanbul || (advanced && istanbul && !block-heights) || networks/typical::qbft'
+          - 'basic || basic-istanbul || (advanced && istanbul && !block-heights) || networks/typical::qbft || empty-block-period'
           - 'validator-management && networks/template::istanbul-3plus1'
           - 'validator-management && networks/template::qbft-3plus1'
           - 'multitenancy && networks/plugins::raft-multitenancy'
@@ -76,16 +76,16 @@ jobs:
           - 'migration && networks/template::raft-4nodes'
           - 'basic || networks/typical::raftmps'
           - 'basic || networks/typical::istanbulmps'
-          - 'basic || networks/typical::qbftmps'
+          - 'basic || networks/typical::qbftmps || empty-block-period'
 
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft || empty-block-period'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft-account-plugin-hashicorp-vault'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft-account-plugin-hashicorp-vault || empty-block-period'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul-account-plugin-hashicorp-vault'
           - 'basic-rpc-security || networks/plugins::raft-rpc-security'
-          - 'basic-rpc-security || networks/plugins::qbft-rpc-security'
+          - 'basic-rpc-security || networks/plugins::qbft-rpc-security || empty-block-period'
           - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
 
           - 'migration && networks/template::raft-4nodes'
@@ -99,10 +99,10 @@ jobs:
           - 'multitenancy && networks/plugins::raft-multitenancy'
 
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps || empty-block-period'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
           - 'basic || networks/typical::raftmps'
-          - 'basic || networks/typical::qbftmps'
+          - 'basic || networks/typical::qbftmps || empty-block-period'
           - 'basic || networks/typical::istanbulmps'
           - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
           - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
@@ -115,7 +115,7 @@ jobs:
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::qbft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
-          - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
+          - 'qbft-transition-network && networks/template::qbft-4nodes-transition || empty-block-period'
         privacy-enhancements:
           - 'false'
         privacy-precompile:
@@ -139,7 +139,7 @@ jobs:
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
-          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+          - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft || empty-block-period'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
@@ -155,7 +155,7 @@ jobs:
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+          - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps || empty-block-period'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
@@ -167,7 +167,7 @@ jobs:
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
+          - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps || empty-block-period'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
@@ -180,7 +180,7 @@ jobs:
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft || empty-block-period'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
