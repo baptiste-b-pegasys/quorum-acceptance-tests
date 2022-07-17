@@ -115,7 +115,7 @@ jobs:
           - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::qbft-3plus1'
           - 'validator-management && networks/template::istanbul-3plus1'
-          - 'qbft-transition-network && networks/template::qbft-4nodes-transition || empty-block-period'
+          - 'qbft-transition-network && networks/template::qbft-4nodes-transition && empty-block-period'
         privacy-enhancements:
           - 'false'
         privacy-precompile:
