@@ -32,8 +32,10 @@ locals {
       homesteadBlock      = 0
       byzantiumBlock      = 0
       constantinopleBlock = 0
-      istanbulBlock       = 0
       petersburgBlock     = 0
+      istanbulBlock       = 0
+      muirGlacierBlock    = 0
+      berlinBlock         = 0
       chainId             = var.hybrid_network ? var.hybrid_network_id : random_integer.network_id.result
       eip150Block         = 0
       eip155Block         = 0
@@ -64,6 +66,8 @@ locals {
     constantinopleBlock = 0
     istanbulBlock       = 0
     petersburgBlock     = 0
+    muirGlacierBlock    = 0
+    berlinBlock         = 0
     chainId             = var.hybrid_network ? var.hybrid_network_id : random_integer.network_id.result
     eip150Block         = 0
     eip155Block         = 0
