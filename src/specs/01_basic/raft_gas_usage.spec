@@ -42,10 +42,10 @@ successfully simulated and minted (the behavior is the same as if privacy enhanc
 
 ## Private contract with sufficient gas should be accepted.
 
-* Private transaction where minter is a participant and gas value is "120000", name this contract as "contract5"
+* Private transaction where minter is a participant and gas value is "150000", name this contract as "contract5"
 * Contract "contract5" creation succeeded
 * No transactions are pending on node for "contract5"
 
-* Private transaction where minter is not a participant and gas value is "120000", name this contract as "contract6"
+* Private transaction where minter is not a participant and gas value is "150000", name this contract as "contract6"
 * Contract "contract6" creation succeeded
 * No transactions are pending on node for "contract6"
