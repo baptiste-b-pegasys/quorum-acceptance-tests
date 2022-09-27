@@ -166,6 +166,7 @@ jobs:
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
           echo "::warning ::Using ghcr.io/baptiste-b-pegasys/quorum:block-reward"
           echo "TF_VAR_quorum_docker_image={name=\"ghcr.io/baptiste-b-pegasys/quorum:block-reward\", local=true}" >> $dockerEnvFile
+          echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login ghcr.io -u baptiste-b-pegasys --password-stdin
           docker pull ghcr.io/baptiste-b-pegasys/quorum:block-reward
           if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
