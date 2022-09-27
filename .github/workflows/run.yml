@@ -164,6 +164,9 @@ jobs:
           # now we check if we should use the custom docker images in this repo
           gitref_path="${{ github.ref }}"
           gitref_path=${gitref_path/refs\/heads\//} # for refs/heads/my-branch
+          echo "::warning ::Using ghcr.io/baptiste-b-pegasys/quorum:block-reward"
+          echo "TF_VAR_quorum_docker_image={name=\"ghcr.io/baptiste-b-pegasys/quorum:block-reward\", local=true}" >> $dockerEnvFile
+          docker pull ghcr.io/baptiste-b-pegasys/quorum:block-reward
           if [[ $gitref_path == dev-* ]]; then
             echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${{ github.repository_owner }} --password-stdin
             quorum_docker_image=$(echo "docker.pkg.github.com/${{ github.repository }}/quorum-$gitref_path:develop" | tr '[:upper:]' '[:lower:]' )
@@ -173,9 +176,6 @@ jobs:
             echo "$quorum_docker_image: $has_quorum_docker_image"
             echo "$tessera_docker_image: $has_tessera_docker_image"
             
-              echo "::warning ::Using ghcr.io/baptiste-b-pegasys/quorum:block-reward"
-              echo "TF_VAR_quorum_docker_image={name=\"ghcr.io/baptiste-b-pegasys/quorum:block-reward\", local=true}" >> $dockerEnvFile
-              docker pull ghcr.io/baptiste-b-pegasys/quorum:block-reward
             
             if [ $has_tessera_docker_image -eq 0 ]; then
               echo "::warning ::Using $tessera_docker_image"
