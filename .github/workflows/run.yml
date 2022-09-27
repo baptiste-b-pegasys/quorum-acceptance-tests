@@ -1,20 +1,10 @@
 name: Standard Acceptance Tests
 on:
-  schedule:
-    - cron: '0 12 * * *'
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
-    branches:
-      - '**'
-  push:
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
-    branches:
-      - 'master'
-      - 'dev-*'
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Name'
+        default: 'default'
 jobs:
   condition:
     name: Evaluate workflow run conditions
