@@ -18,7 +18,7 @@ on:
 jobs:
   condition:
     name: Evaluate workflow run conditions
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       should_run: '${{ steps.check.outputs.val }}'
       use_aws: '${{ steps.check.outputs.useAws }}'
@@ -49,7 +49,7 @@ jobs:
     if: needs.condition.outputs.should_run == 'true'
     needs:
       - condition
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       output_dir: '${{ steps.prepare.outputs.output_dir }}'
       output_file: '${{ steps.prepare.outputs.output_file }}'
@@ -97,7 +97,7 @@ jobs:
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft || empty-block-period'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft || empty-block-period || block-reward'
           - 'gcmode && block-sync && networks/template::raft-3plus1'
           - 'gcmode && block-sync && networks/template::istanbul-3plus1'
           - 'gcmode && block-sync && networks/template::qbft-3plus1'
@@ -108,7 +108,7 @@ jobs:
           - 'hybrid-validator-management-manage-quorum && networks/typical-hybrid::hybrid-template-q1b2'
           - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft || empty-block-period'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft || empty-block-period || block-reward'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft-account-plugin-hashicorp-vault'
@@ -126,7 +126,7 @@ jobs:
           - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
           - 'multitenancy && networks/plugins::raft-multitenancy'
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps || empty-block-period'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps || empty-block-period || block-reward'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
           - 'basic || networks/typical::raftmps'
           - 'basic || networks/typical::qbftmps'
@@ -144,7 +144,7 @@ jobs:
           - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Download docker image'
         uses: actions/cache@v2
@@ -305,7 +305,7 @@ jobs:
       - condition
       - docker-build
       - run
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Setup metadata'
         id: setup

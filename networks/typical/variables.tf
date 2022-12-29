@@ -24,6 +24,12 @@ variable "privacy_marker_transactions" {
   description = "Enable privacy marker transactions on the node"
 }
 
+variable "enable_gas_price" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "enable/disable gas price and set the block height at which it is enabled"
+}
+
 variable "network_name" {
   default = "typical"
 }
@@ -178,15 +184,9 @@ variable "qbftBlock" {
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
-variable "qbft_empty_block_period" {
-  type        = object({ block = number, emptyblockperiod = number })
-  default     = { block = 120, emptyblockperiod = 5 }
-  description = "qbft empty block period (number in seconds)"
-}
-
 variable "transition_config" {
-  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
-  default = { transitions = [{ "block": 120, "emptyblockperiodseconds": 20}, { "block": 250, "emptyblockperiodseconds": 1}] }
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number), blockReward = optional(string), miningBeneficiary = optional(string), beneficiaryMode = optional(string)}))})
+  default = { transitions = [{ "block": 110, "miningBeneficiary": "0x0638e1574728b6d862dd5d3a3e0942c3be47d996", "blockReward": "20"}, { "block": 115, "beneficiaryMode": "fixed"}, { "block": 120, "emptyblockperiodseconds": 2, "blockReward": "0xa"}, { "block": 125, "emptyblockperiodseconds": 1, "beneficiaryMode": "validators" }] }
 }
 
 variable "qlight_clients" {

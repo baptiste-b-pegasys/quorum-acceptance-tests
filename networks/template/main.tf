@@ -52,12 +52,14 @@ module "network" {
   consensus             = module.helper.consensus
   privacy_enhancements  = var.privacy_enhancements
   privacy_precompile    = var.privacy_precompile
+  enable_gas_price      = var.enable_gas_price
   network_name          = var.network_name
   geth_networking       = module.helper.geth_networking
   tm_networking         = module.helper.tm_networking
   output_dir            = var.output_dir
   exclude_initial_nodes = var.exclude_initial_nodes
   qbftBlock             = var.qbftBlock
+  transition_config     = var.transition_config
 
   qbft_empty_block_period = var.qbft_empty_block_period
   transition_config       = var.transition_config

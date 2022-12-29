@@ -61,6 +61,7 @@ import org.web3j.quorum.enclave.SendResponse;
 import org.web3j.quorum.enclave.Tessera;
 import org.web3j.quorum.enclave.protocol.EnclaveService;
 import org.web3j.quorum.methods.request.PrivateTransaction;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpEncoder;
 import org.web3j.rlp.RlpList;
@@ -581,7 +582,8 @@ public class RawContractService extends AbstractService {
                 allObservableContracts.add(Observable.fromArray(rawPrivateContracts)
                     .flatMap(raw -> sendRawPrivateTransaction(source, raw.rawTransaction, targetNode)
                         .map(b -> transactionService.waitForTransactionReceipt(targetNode, b.getTransactionHash()))
-                        .map(receipt -> new RawDeployedContractTarget(raw.value, raw.node, receipt)).subscribeOn(Schedulers.io())));
+                        .map(receipt -> new RawDeployedContractTarget(raw.value, raw.node, receipt))
+                        .subscribeOn(Schedulers.single())));
             }
             return allObservableContracts;
         } catch (IOException e) {

@@ -20,6 +20,12 @@ variable "privacy_marker_transactions" {
   description = "Enable privacy marker transactions on the node"
 }
 
+variable "enable_gas_price" {
+  type        = object({ block = number, enabled = bool })
+  default     = { block = 0, enabled = false }
+  description = "enable/disable gas price and set the block height at which it is enabled"
+}
+
 variable "network_name" {
   default = "typical-hybrid"
 }
@@ -180,14 +186,9 @@ variable "qbftBlock" {
   description = "qbft fork block (enabled/disabled) and the block height at which it is enabled"
 }
 
-variable "qbft_empty_block_period" {
-  type        = object({ block = number, emptyblockperiod = number })
-  default     = { block = 110, emptyblockperiod = 1 }
-  description = "qbft empty block period (number in seconds)"
-}
 
 variable "transition_config" {
-  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number)}))})
+  type    = object({ transitions = list(object({ block = number, algorithm = optional(string), emptyblockperiodseconds = optional(number), blockReward = optional(string), miningBeneficiary = optional(string), beneficiaryMode = optional(string)}))})
   default = { transitions = [] }
 }
 

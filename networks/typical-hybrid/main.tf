@@ -166,12 +166,12 @@ module "network" {
   consensus                     = module.helper.consensus
   privacy_enhancements          = var.privacy_enhancements
   privacy_precompile            = var.privacy_precompile
+  enable_gas_price              = var.enable_gas_price
   network_name                  = var.network_name
   geth_networking               = local.geth_networking
   tm_networking                 = local.tm_networking
   output_dir                    = var.output_dir
   qbftBlock                     = var.qbftBlock
-  qbft_empty_block_period       = var.qbft_empty_block_period
   transition_config             = var.transition_config
   hybrid_extradata              = quorum_bootstrap_istanbul_extradata.hybrid.extradata
   hybrid_network                = local.hybrid_network

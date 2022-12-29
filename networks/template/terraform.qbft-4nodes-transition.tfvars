@@ -6,5 +6,4 @@ number_of_nodes         = 4
 consensus               = "istanbul"
 addtional_geth_args     = "--allow-insecure-unlock"
 qbftBlock               = { block = 100, enabled = true }
-qbft_empty_block_period = { block = 120, emptyblockperiod = 5 }
-transition_config = { transitions: [{ "block": tonumber(var.qbftBlock.block), "algorithm": "qbft" }, { "block": tonumber(var.qbft_empty_block_period.block), "emptyblockperiodseconds": tonumber(var.qbft_empty_block_period.emptyblockperiod) }, { "block": tonumber(250), "emptyblockperiodseconds": tonumber(1) }] }
+transition_config       = { transitions: [{ "block": 100, "algorithm": "qbft" }, { "block": 110, "miningBeneficiary": "0x0638e1574728b6d862dd5d3a3e0942c3be47d996", "blockReward": "20"}, { "block": 115, "beneficiaryMode": "fixed"}, { "block": 120, "emptyblockperiodseconds": 2, "blockReward": "0xa"}, { "block": 125, "emptyblockperiodseconds": 1, "beneficiaryMode": "validators" }] }

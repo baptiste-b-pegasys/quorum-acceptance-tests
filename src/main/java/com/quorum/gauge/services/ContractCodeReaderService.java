@@ -19,7 +19,7 @@
 
 package com.quorum.gauge.services;
 
-import com.quorum.gauge.common.PrivacyFlag;
+
 import com.quorum.gauge.common.QuorumNetworkProperty;
 import com.quorum.gauge.ext.PrivateClientTransactionManager;
 import com.quorum.gauge.sol.ContractCodeReader;
@@ -40,7 +40,9 @@ import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.quorum.PrivacyFlag;
 import org.web3j.quorum.Quorum;
+import org.web3j.quorum.tx.ClientTransactionManager;
 import org.web3j.tx.Contract;
 import org.web3j.tx.exceptions.ContractCallException;
 
@@ -67,12 +69,12 @@ public class ContractCodeReaderService extends AbstractService {
         Quorum client = connectionFactory().getConnection(source);
 
         return accountService.getAccountAddress(source, ethAccountAlias).flatMap(eoa -> {
-            PrivateClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
+            ClientTransactionManager clientTransactionManager = new PrivateClientTransactionManager(
                 client,
                 eoa,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                List.of(PrivacyFlag.StandardPrivate)
+                PrivacyFlag.STANDARD_PRIVATE
             );
             return ContractCodeReader.deploy(client, clientTransactionManager, getPermContractDepGasProvider()).flowable().toObservable();
         });
@@ -87,7 +89,7 @@ public class ContractCodeReaderService extends AbstractService {
                 eoa,
                 privacyService.id(privateFromAlias),
                 privateForAliases.stream().map(privacyService::id).collect(Collectors.toList()),
-                List.of(PrivacyFlag.StandardPrivate)
+                PrivacyFlag.STANDARD_PRIVATE
             ))
             .flatMap(txManager -> ContractCodeReader.load(
                 contractAddress, client, txManager, BigInteger.ZERO, DEFAULT_GAS_LIMIT).setLastCodeSize(targetContractAddress)

@@ -38,12 +38,13 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
+import static com.quorum.gauge.ext.PrivateClientTransactionManager.*;
+import static com.quorum.gauge.ext.PrivateClientTransactionManager.DEFAULT_MAX_RETRY;
+
 public abstract class AbstractService {
 
     public static final BigInteger DEFAULT_GAS_LIMIT = new BigInteger("47b760", 16);
     BigInteger DEFAULT_PERMISSIONS_GAS_LIMIT = new BigInteger("8C6180", 16);
-    public static int DEFAULT_SLEEP_DURATION_IN_MILLIS = 2000;
-    public static int DEFAULT_MAX_RETRY = 30;
 
     private ContractGasProvider permContractGasProvider = new PermissionContractGasProvider();
     private ContractGasProvider permContractDepGasProvider = new PermissionContractDeployGasProvider();
@@ -108,6 +109,6 @@ public abstract class AbstractService {
                                                        Enclave enclave) {
 
 
-        return new QuorumTransactionManager(web3j, credentials, privateFrom, privateFor, enclave, DEFAULT_MAX_RETRY, DEFAULT_SLEEP_DURATION_IN_MILLIS);
+        return new QuorumTransactionManager(web3j, enclave, credentials, privateFrom, privateFor);
     }
 }

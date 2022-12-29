@@ -52,12 +52,12 @@ ls ${local.container_besu_datadir}
 
 if [ "$ALWAYS_REFRESH" == "true" ]; then
   echo "Deleting ${local.container_besu_datadir} to refresh with original datadir"
-  rm -rf ${local.container_besu_datadir}
+  rm -rf ${local.container_besu_datadir} || true
 fi
 
 if [ ! -f "${local.container_besu_datadir}/genesis.json" ]; then
   echo "Genesis file missing. Copying mounted datadir to ${local.container_besu_datadir}"
-  rm -r ${local.container_besu_datadir}
+  rm -r ${local.container_besu_datadir} || true
   cp -r ${local.container_besu_datadir_mounted} ${local.container_besu_datadir}
 fi
 echo "Current files in datadir (ls ${local.container_besu_datadir})"
@@ -89,6 +89,7 @@ exec /opt/besu/bin/besu \
         --privacy-url="${local.container_tm_q2t_urls[count.index]}" \
         --privacy-public-key-file=${local.container_besu_datadir}/tmkey.pub \
         --privacy-onchain-groups-enabled=false \
+        --tx-pool-limit-by-account-percentage=0.5 \
 %{if var.hybrid_network~}
         --rpc-http-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,QBFT \
         --rpc-ws-api=ADMIN,EEA,WEB3,ETH,MINER,NET,PRIV,PERM,GOQUORUM,QBFT ;
