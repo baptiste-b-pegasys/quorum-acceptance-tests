@@ -1,4 +1,4 @@
-name: ATs
+name: Trigger All Acceptance Tests
 on:
   workflow_dispatch:
     inputs:
@@ -18,9 +18,40 @@ on:
         description: 'Set true to build the docker image'
         default: 'false'
 jobs:
+  condition:
+    name: Evaluate workflow run conditions
+    runs-on: ubuntu-20.04
+    outputs:
+      should_run: '${{ steps.check.outputs.val }}'
+      use_aws: '${{ steps.check.outputs.useAws }}'
+      infra: '${{ steps.check.outputs.infra }}'
+    steps:
+      - name: Check
+        id: check
+        run: |
+          val="false"
+          if [ \( "${{ github.event_name }}" == "schedule" -a "${{ secrets.SCHEDULE_RUN }}" != "disable" \) -o "${{ github.event_name }}" != "schedule" ]; then
+            val="true"
+          fi
+          if [ "$val" == "false" ]; then
+            echo "::warning ::Runs are conditionally skipped"
+          fi
+          useAws="true"
+          infraName="AWS"
+          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" == "" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ secrets.DISABLE_AWS }}" == "true" ]; then
+            useAws="false"
+            infraName="GithubActionsVM"
+          fi
+          echo "::warning ::Networks are provisioned using $infraName infrastructure"
+          echo "::set-output name=val::$val"
+          echo "::set-output name=useAws::$useAws"
+          echo "::set-output name=infra::$infraName"
   docker-build:
     name: 'Build Docker image'
-    runs-on: ${{ github.event.inputs.runs-on }}
+    if: needs.condition.outputs.should_run == 'true'
+    needs:
+      - condition
+    runs-on: ubuntu-20.04
     outputs:
       output_dir: '${{ steps.prepare.outputs.output_dir }}'
       output_file: '${{ steps.prepare.outputs.output_file }}'
@@ -46,40 +77,40 @@ jobs:
         if: steps.cache-image.outputs.cache-hit != 'true'
         uses: actions/checkout@v2
       - name: 'Build docker image'
-        if: github.event.inputs.force-build-docker == 'true' || steps.cache-image.outputs.cache-hit != 'true'
+        if: steps.cache-image.outputs.cache-hit != 'true'
         id: build
         run: |
           docker build -t ${{ steps.prepare.outputs.image_name }} .
           docker save ${{ steps.prepare.outputs.image_name }} > ${{ steps.prepare.outputs.image_file }}
           tar cfvz ${{ steps.prepare.outputs.output_file }} ${{ steps.prepare.outputs.image_file }}
-
   run:
     # This workflow uses tag expression and its sha256 hash to aggregate test results
     # from each execution. It is important that the job name has tag expression in the
     # suffix and encapsulated within parathensis
     name: Tests tagged with (${{ matrix.tag }})
+    if: needs.condition.outputs.should_run == 'true'
     needs:
+      - condition
       - docker-build
     strategy:
       fail-fast: false
-#      max-parallel: 4
       matrix:
         # list of tag expression being executed in parallel
         tag:
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul && !block-heights) || networks/typical::istanbul'
-          - 'basic || basic-istanbul || (advanced && istanbul && !block-heights) || networks/typical::qbft'
-          - 'validator-management && networks/template::istanbul-3plus1'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft || empty-block-period || block-reward'
+          - 'gcmode && block-sync && networks/template::raft-3plus1'
+          - 'gcmode && block-sync && networks/template::istanbul-3plus1'
+          - 'gcmode && block-sync && networks/template::qbft-3plus1'
+          - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
           - 'validator-management && networks/template::qbft-3plus1'
-          - 'multitenancy && networks/plugins::raft-multitenancy'
-          - 'migration && networks/template::istanbul-4nodes'
-          - 'migration && networks/template::raft-4nodes'
-          - 'basic || networks/typical::raftmps'
-          - 'basic || networks/typical::istanbulmps'
-          - 'basic || networks/typical::qbftmps'
-
+          - 'validator-management && networks/template::istanbul-3plus1'
+          - 'hybrid-validator-management-manage-besu && networks/typical-hybrid::hybrid-template-q2b1'
+          - 'hybrid-validator-management-manage-quorum && networks/typical-hybrid::hybrid-template-q1b2'
+          - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft || empty-block-period || block-reward'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::istanbul'
           - 'basic || basic-raft || (advanced && raft) || networks/plugins::raft-account-plugin-hashicorp-vault'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/plugins::qbft-account-plugin-hashicorp-vault'
@@ -87,7 +118,6 @@ jobs:
           - 'basic-rpc-security || networks/plugins::raft-rpc-security'
           - 'basic-rpc-security || networks/plugins::qbft-rpc-security'
           - 'basic-rpc-security || networks/plugins::istanbul-rpc-security'
-
           - 'migration && networks/template::raft-4nodes'
           - 'migration && networks/template::istanbul-4nodes'
           - 'migration && networks/template::raft-4nodes-ancientdb'
@@ -97,25 +127,25 @@ jobs:
           - 'privacy-enhancements-upgrade || networks/template::raft-4nodes-pe'
           - 'privacy-enhancements-upgrade || networks/template::istanbul-4nodes-pe'
           - 'multitenancy && networks/plugins::raft-multitenancy'
-
           - 'basic || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
-          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps || empty-block-period || block-reward'
           - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
           - 'basic || networks/typical::raftmps'
           - 'basic || networks/typical::qbftmps'
           - 'basic || networks/typical::istanbulmps'
           - 'mps-upgrade-txtrace || networks/template::raft-4nodes-mps'
           - 'mps-upgrade-txtrace || networks/template::istanbul-4nodes-mps'
+          - 'mps-mixed-network-psr-check || networks/template::raft-4nodes-mps-mixed'
+          - 'mps-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-mixed'
+          - 'mps-pmt-mixed-network-psr-check || networks/template::raft-4nodes-mps-pmt'
+          - 'mps-pmt-mixed-network-psr-check || networks/template::istanbul-4nodes-mps-pmt'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight'
+          - 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-alt'
+          - '(basic && !privacy-enhancements-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-qlight-mps'
+          - 'multitenancy && networks/plugins::qbft-qlight-multitenancy'
+          - 'multitenancy-qlight-client && networks/plugins::qbft-qlight-multitenancy-alt'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-besu::ibft2'
           - '(basic && !nosupport && !mps && !(spam && !raw) && !eth-api-signed && !privacy-enhancements-disabled && !graphql && !async && !extension && !storage-root && !personal-api-signed) || networks/typical-hybrid::hybrid'
-
-          - 'gcmode && block-sync && networks/template::raft-3plus1'
-          - 'gcmode && block-sync && networks/template::istanbul-3plus1'
-          - 'gcmode && block-sync && networks/template::qbft-3plus1'
-          - 'learner-peer-management || raftdnsenable && networks/template::raft-3plus1'
-          - 'validator-management && networks/template::qbft-3plus1'
-          - 'validator-management && networks/template::istanbul-3plus1'
-          - 'qbft-transition-network && networks/template::qbft-4nodes-transition'
         privacy-enhancements:
           - 'false'
         privacy-precompile:
@@ -123,68 +153,106 @@ jobs:
         privacy-marker-transactions:
           - 'false'
         include:
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-raft || (advanced && raft) || networks/typical::raft'
-            privacy-enhancements: 'true'
-            privacy-precompile: 'false'
-            privacy-marker-transactions: 'false'
-          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
-            privacy-enhancements: 'true'
-            privacy-precompile: 'false'
-            privacy-marker-transactions: 'false'
+          # privacy enhancements tests
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-raft || (advanced && raft) || networks/typical::raft'
+            privacy-enhancements: true
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            enable-gas-price: false
+          - tag: '(basic && !privacy-enhancements-disabled) || privacy-enhancements || mandatory-recipients || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            privacy-enhancements: true
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            enable-gas-price: false
+          # privacy precompile/privacy marker transaction tests
           - tag: 'basic || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: 'basic || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: false
+            enable-gas-price: false
           - tag: '(multitenancy || privacy-precompile-enabled) && networks/plugins::raft-multitenancy'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-raft || (advanced && raft) || networks/typical::raft-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || basic-istanbul || (advanced && istanbul) || networks/typical::qbft-simple-mps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::raftmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::istanbulmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           - tag: '(basic && !privacy-precompile-disabled) || networks/typical::qbftmps'
             privacy-enhancements: false
             privacy-precompile: true
             privacy-marker-transactions: true
+            enable-gas-price: false
           # privacy enhancements + privacy precompile/privacy marker transaction tests
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-raft || (advanced && raft) || networks/typical::raft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
+            enable-gas-price: false
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::istanbul'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
+            enable-gas-price: false
+          - tag: '(basic && !privacy-enhancements-disabled && !privacy-precompile-disabled) || privacy-enhancements || mandatory-recipients || privacy-precompile-enabled || basic-istanbul || (advanced && istanbul) || networks/typical::qbft'
             privacy-enhancements: true
             privacy-precompile: true
             privacy-marker-transactions: true
-    runs-on: ${{ github.event.inputs.runs-on }}
+            enable-gas-price: false
+          - tag: 'privacy-precompile-compatibility && networks/template::raft-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            enable-gas-price: false
+          - tag: 'privacy-precompile-compatibility && networks/template::istanbul-4nodes'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: false # do not enable pmts as the test will do this on the necessary nodes
+            enable-gas-price: false
+          # tests for enabled gas-price
+          - tag: 'gas-price-enabled || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: false
+            privacy-marker-transactions: false
+            enable-gas-price: true
+          - tag: 'gas-price-enabled || networks/typical::raft'
+            privacy-enhancements: false
+            privacy-precompile: true
+            privacy-marker-transactions: true
+            enable-gas-price: true
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Download docker image'
         uses: actions/cache@v2
@@ -224,36 +292,17 @@ jobs:
             docker pull $tessera_docker_image
           fi
 
-          echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements }}}" >> $dockerEnvFile
-          echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile }}}" >> $dockerEnvFile
-          echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions }}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_enhancements={block=0, enabled=${{ matrix.privacy-enhancements}}}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_precompile={block=0, enabled=${{ matrix.privacy-precompile}}}" >> $dockerEnvFile
+          echo "TF_VAR_privacy_marker_transactions=${{ matrix.privacy-marker-transactions}}" >> $dockerEnvFile
+          echo "TF_VAR_enable_gas_price={block=0, enabled=${{ matrix.enable-gas-price}}}" >> $dockerEnvFile
           echo "::set-output name=tag::$tagKey"
           echo "::set-output name=mvnArg::$mvnArg"
           echo "::set-output name=dockerEnv::$dockerEnv"
           echo "::set-output name=outputDir::${{ runner.temp }}"
           echo "::set-output name=dockerEnvFile::$dockerEnvFile"
-
-          cat <<EOF > cpu.sh
-            #!/bin/bash
-            while :
-            do
-              date
-              grep 'cpu ' /proc/stat
-              free -m | awk '/Mem:/ { print $7 }'
-              sleep 10s
-            done
-          EOF
-          chmod +x cpu.sh
-      - name: 'Run tests'
+      - name: 'Run tests using ${{ needs.condition.outputs.infra }}'
         run: |
-          free -m
-          cat /proc/stat
-          while [ `free -m | awk '/Mem:/ { print $7 }'` < 1024 ]; do
-            echo "not enough memory, sleeping"
-            free -m
-            sleep 1s
-          done
-          ./cpu.sh &
           # we don't remove the container after run as we need to clean up the infra if used
           docker run \
               --name acctests-run ${{ steps.setup.outputs.dockerEnv }} \
@@ -265,7 +314,6 @@ jobs:
                 -Dtags="${{ matrix.tag }}" ${{ steps.setup.outputs.mvnArg }} \
                 -Dauto.outputDir=${{ steps.setup.outputs.outputDir }} \
                 -Dauto.jobid=${{ steps.setup.outputs.tag }}
-          kill %1
       - name: 'Failure info'
         if: ${{ failure() }}
         run: |
